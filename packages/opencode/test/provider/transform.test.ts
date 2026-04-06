@@ -224,6 +224,95 @@ describe("ProviderTransform.options - gateway", () => {
   })
 })
 
+describe("ProviderTransform.options - venice", () => {
+  const sessionID = "test-session-123"
+  const make = () =>
+    ({
+      id: "venice/qwen3-32b",
+      providerID: "venice",
+      api: {
+        id: "qwen3-32b",
+        url: "https://api.venice.ai/api/v1",
+        npm: "venice-ai-sdk-provider",
+      },
+      name: "Qwen 3 32B",
+      capabilities: {
+        temperature: true,
+        reasoning: true,
+        attachment: false,
+        toolcall: true,
+        input: { text: true, audio: false, image: false, video: false, pdf: false },
+        output: { text: true, audio: false, image: false, video: false, pdf: false },
+        interleaved: false,
+      },
+      cost: {
+        input: 0.001,
+        output: 0.002,
+        cache: { read: 0.0001, write: 0.0002 },
+      },
+      limit: {
+        context: 128_000,
+        output: 8192,
+      },
+      status: "active",
+      options: {},
+      headers: {},
+      release_date: "2024-01-01",
+    }) as any
+
+  test("sets promptCacheKey for venice models", () => {
+    const result = ProviderTransform.options({
+      model: make(),
+      sessionID,
+      providerOptions: {},
+    })
+
+    expect(result.promptCacheKey).toBe(sessionID)
+  })
+})
+
+describe("ProviderTransform.smallOptions - venice", () => {
+  const make = () =>
+    ({
+      id: "venice/qwen3-32b",
+      providerID: "venice",
+      api: {
+        id: "qwen3-32b",
+        url: "https://api.venice.ai/api/v1",
+        npm: "venice-ai-sdk-provider",
+      },
+      name: "Qwen 3 32B",
+      capabilities: {
+        temperature: true,
+        reasoning: true,
+        attachment: false,
+        toolcall: true,
+        input: { text: true, audio: false, image: false, video: false, pdf: false },
+        output: { text: true, audio: false, image: false, video: false, pdf: false },
+        interleaved: false,
+      },
+      cost: {
+        input: 0.001,
+        output: 0.002,
+        cache: { read: 0.0001, write: 0.0002 },
+      },
+      limit: {
+        context: 128_000,
+        output: 8192,
+      },
+      status: "active",
+      options: {},
+      headers: {},
+      release_date: "2024-01-01",
+    }) as any
+
+  test("disables thinking in smallOptions for venice models", () => {
+    expect(ProviderTransform.smallOptions(make())).toEqual({
+      veniceParameters: { disableThinking: true },
+    })
+  })
+})
+
 describe("ProviderTransform.providerOptions", () => {
   const createModel = (overrides: Partial<any> = {}) =>
     ({
@@ -2161,6 +2250,24 @@ describe("ProviderTransform.variants", () => {
           id: "custom-model",
           url: "https://api.custom.com",
           npm: "@ai-sdk/openai-compatible",
+        },
+      })
+      const result = ProviderTransform.variants(model)
+      expect(Object.keys(result)).toEqual(["low", "medium", "high"])
+      expect(result.low).toEqual({ reasoningEffort: "low" })
+      expect(result.high).toEqual({ reasoningEffort: "high" })
+    })
+  })
+
+  describe("venice-ai-sdk-provider", () => {
+    test("returns WIDELY_SUPPORTED_EFFORTS with reasoningEffort", () => {
+      const model = createMockModel({
+        id: "venice/qwen3-32b",
+        providerID: "venice",
+        api: {
+          id: "qwen3-32b",
+          url: "https://api.venice.ai/api/v1",
+          npm: "venice-ai-sdk-provider",
         },
       })
       const result = ProviderTransform.variants(model)
