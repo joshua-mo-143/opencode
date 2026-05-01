@@ -1648,6 +1648,9 @@ const layer: Layer.Layer<
       if (providerID.startsWith("github-copilot")) {
         priority = ["gpt-5-mini", "claude-haiku-4.5", ...priority]
       }
+      if (providerID === ProviderID.make("venice")) {
+        priority = ["qwen3-4b", "llama-3.2-3b", "mistral-31-24b", "venice-uncensored"]
+      }
       for (const item of priority) {
         if (providerID === ProviderID.amazonBedrock) {
           const crossRegionPrefixes = ["global.", "us.", "eu."]

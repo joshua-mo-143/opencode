@@ -1090,6 +1090,30 @@ test("getSmallModel respects config small_model override", async () => {
   })
 })
 
+test("getSmallModel uses Venice API model", async () => {
+  await using tmp = await tmpdir({
+    init: async (dir) => {
+      await Bun.write(
+        path.join(dir, "opencode.json"),
+        JSON.stringify({
+          $schema: "https://opencode.ai/config.json",
+        }),
+      )
+    },
+  })
+  await Instance.provide({
+    directory: tmp.path,
+    init: async () => {
+      set("VENICE_API_KEY", "test-api-key")
+    },
+    fn: async () => {
+      const model = await getSmallModel(ProviderID.make("venice"))
+      expect(model).toBeDefined()
+      expect(String(model?.id)).toBe("qwen3-4b")
+    },
+  })
+})
+
 test("provider.sort prioritizes preferred models", () => {
   const models = [
     { id: "random-model", name: "Random" },
